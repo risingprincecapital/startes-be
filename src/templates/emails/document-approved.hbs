@@ -1,0 +1,28 @@
+<h2>✅ Document Approved!</h2>
+
+<p>Hi {{userName}},</p>
+
+<p>Great news! Your document has been reviewed and approved.</p>
+
+<div class="info-box">
+    <p><strong>Business:</strong> {{businessName}}</p>
+    <p><strong>Document:</strong> {{documentName}}</p>
+    <p><strong>Status:</strong> <span style="color: #10b981;">✓ Verified</span></p>
+    <p><strong>Reviewed:</strong> {{formatDate reviewedAt}}</p>
+</div>
+
+<p>Your document has been verified and accepted. We're one step closer to completing your business formation!</p>
+
+<h3>Next Steps:</h3>
+<p>{{#if nextSteps}}
+    {{nextSteps}}
+    {{else}}
+    We'll continue processing your application. You'll receive updates as we make progress.
+    {{/if}}</p>
+
+<a href="{{actionUrl}}" class="button">View Progress</a>
+
+<p>Thank you for your prompt submission!</p>
+
+<p>Best regards,<br>
+    The StartEase Team</p>

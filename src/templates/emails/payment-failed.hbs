@@ -1,0 +1,33 @@
+<h2>❌ Payment Failed</h2>
+
+<p>Hi {{userName}},</p>
+
+<p>We encountered an issue processing your payment for {{businessName}}.</p>
+
+<div class="info-box">
+    <p><strong>Business:</strong> {{businessName}}</p>
+    <p><strong>Amount:</strong> {{formatCurrency amount}}</p>
+    <p><strong>Status:</strong> <span style="color: #ef4444;">Payment Failed</span></p>
+    <p><strong>Date:</strong> {{formatDate attemptDate}}</p>
+</div>
+
+<h3>What happened?</h3>
+<p
+    style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #ef4444; border-radius: 4px; color: #1d1d1f;">
+    {{failureReason}}
+</p>
+
+<h3>Next Steps:</h3>
+<ul style="color: #86868b; line-height: 1.8;">
+    <li>Check that your payment method is valid and has sufficient funds</li>
+    <li>Update your payment information if needed</li>
+    <li>Try again or use a different payment method</li>
+</ul>
+
+<a href="{{actionUrl}}" class="button">Retry Payment</a>
+
+<p>Your services are currently on hold until payment is completed. If you need assistance, our support team is here to
+    help.</p>
+
+<p>Best regards,<br>
+    The StartEase Team</p>

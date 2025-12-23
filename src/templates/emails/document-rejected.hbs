@@ -1,0 +1,32 @@
+<h2>⚠️ Document Needs Attention</h2>
+
+<p>Hi {{userName}},</p>
+
+<p>We've reviewed your submitted document, but unfortunately we need you to resubmit it.</p>
+
+<div class="info-box">
+    <p><strong>Business:</strong> {{businessName}}</p>
+    <p><strong>Document:</strong> {{documentName}}</p>
+    <p><strong>Status:</strong> <span style="color: #ef4444;">✗ Rejected</span></p>
+    <p><strong>Reviewed:</strong> {{formatDate reviewedAt}}</p>
+</div>
+
+<h3>Reason for Rejection:</h3>
+<p
+    style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #ef4444; border-radius: 4px; color: #1d1d1f;">
+    {{rejectionReason}}
+</p>
+
+<h3>What you need to do:</h3>
+<ul style="color: #86868b; line-height: 1.8;">
+    <li>Review the feedback above</li>
+    <li>Make the necessary corrections</li>
+    <li>Upload the updated document</li>
+</ul>
+
+<a href="{{actionUrl}}" class="button">Upload New Document</a>
+
+<p>If you have any questions about the feedback, please don't hesitate to reach out to our support team.</p>
+
+<p>Best regards,<br>
+    The StartEase Team</p>

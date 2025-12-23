@@ -1,0 +1,17 @@
+version: 1.0
+runtime: nodejs20
+build:
+  commands:
+    build:
+      - npm install
+      - npm run build
+run:
+  command: npm start
+  network:
+    port: 9000
+  env:
+    - name: PORT
+      value: "9000"
+    - name: NODE_ENV
+      value: "production"
+# Note: Sensitive environment variables should be added via the AWS Console or Secrets Manager

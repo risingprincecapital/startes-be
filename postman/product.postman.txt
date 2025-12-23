@@ -1,0 +1,387 @@
+# =============================================================================
+# PRODUCT ROUTES - CURL COMMANDS
+# Base URL: http://localhost:3000/api/products
+# All routes require authentication (Bearer token)
+# =============================================================================
+
+# Replace these variables with your actual values
+TOKEN="your_jwt_token_here"
+PRODUCT_ID="your_product_id_here"
+
+# =============================================================================
+# 1. CREATE PRODUCT
+# =============================================================================
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "LLC Formation - Standard",
+    "description": "Complete LLC formation service with standard processing",
+    "price": 299,
+    "processType": "standard",
+    "departmentType": "state",
+    "timeToComplete": 14,
+    "productType": "onetime",
+    "category": "Business Formation",
+    "subCategory": "LLC",
+    "requiredDocs": [
+      {
+        "docName": "Articles of Organization",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Legal document to form LLC"
+      },
+      {
+        "docName": "Operating Agreement",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Internal operating rules"
+      }
+    ],
+    "acknowledgements": [
+      {
+        "docName": "EIN Confirmation",
+        "uploadTime": "Day 10",
+        "file": "",
+        "docType": "PDF",
+        "category": "acknowledgement",
+        "isRequired": false,
+        "description": "Federal Tax ID confirmation"
+      }
+    ]
+  }'
+
+# =============================================================================
+# 2. GET ALL PRODUCTS (with pagination)
+# =============================================================================
+curl -X GET "http://localhost:3000/api/products?limit=50&page=1&isActive=true" \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 3. GET ALL PRODUCTS (with filters)
+# =============================================================================
+# Filter by process type
+curl -X GET "http://localhost:3000/api/products?processType=standard&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filter by department type
+curl -X GET "http://localhost:3000/api/products?departmentType=state&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filter by product type
+curl -X GET "http://localhost:3000/api/products?productType=onetime&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filter by category
+curl -X GET "http://localhost:3000/api/products?category=Business%20Formation&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Search by text
+curl -X GET "http://localhost:3000/api/products?search=LLC&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Multiple filters combined
+curl -X GET "http://localhost:3000/api/products?processType=standard&departmentType=state&productType=onetime&isActive=true&limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 4. GET PRODUCTS BY DEPARTMENT
+# =============================================================================
+# Federal products
+curl -X GET http://localhost:3000/api/products/department/federal \
+  -H "Authorization: Bearer $TOKEN"
+
+# State products
+curl -X GET http://localhost:3000/api/products/department/state \
+  -H "Authorization: Bearer $TOKEN"
+
+# Startease products
+curl -X GET http://localhost:3000/api/products/department/startease \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 5. GET PRODUCTS BY PROCESS TYPE
+# =============================================================================
+# Expedite products
+curl -X GET http://localhost:3000/api/products/process-type/expedite \
+  -H "Authorization: Bearer $TOKEN"
+
+# Standard products
+curl -X GET http://localhost:3000/api/products/process-type/standard \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 6. GET PRODUCTS BY PRODUCT TYPE
+# =============================================================================
+# Recurring products
+curl -X GET http://localhost:3000/api/products/product-type/recurring \
+  -H "Authorization: Bearer $TOKEN"
+
+# One-time products
+curl -X GET http://localhost:3000/api/products/product-type/onetime \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 7. GET PRODUCT BY ID (with usage statistics)
+# =============================================================================
+curl -X GET http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 8. UPDATE PRODUCT
+# =============================================================================
+# Update price and description
+curl -X PUT http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 349,
+    "description": "Updated description with more details and premium features"
+  }'
+
+# Update process type
+curl -X PUT http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "processType": "expedite",
+    "timeToComplete": 7,
+    "price": 499
+  }'
+
+# Update required documents
+curl -X PUT http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requiredDocs": [
+      {
+        "docName": "Articles of Organization",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Legal document to form LLC"
+      },
+      {
+        "docName": "Operating Agreement",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Internal operating rules"
+      },
+      {
+        "docName": "Proof of Address",
+        "uploadTime": "Day 2",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Business address verification"
+      }
+    ]
+  }'
+
+# Update product category
+curl -X PUT http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "Business Services",
+    "subCategory": "Formation"
+  }'
+
+# =============================================================================
+# 9. DELETE PRODUCT (Soft Delete - Deactivate)
+# =============================================================================
+curl -X DELETE http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# 10. DELETE PRODUCT (Permanent Delete)
+# =============================================================================
+# NOTE: This will fail if the product is assigned to any business
+curl -X DELETE http://localhost:3000/api/products/$PRODUCT_ID/permanent \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# EXAMPLE WORKFLOW
+# =============================================================================
+
+# Step 1: Create a new product and capture the ID
+RESPONSE=$(curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "EIN Application Service",
+    "description": "Federal Employer Identification Number application service",
+    "price": 99,
+    "processType": "standard",
+    "departmentType": "federal",
+    "timeToComplete": 3,
+    "productType": "onetime",
+    "category": "Tax Services",
+    "subCategory": "EIN"
+  }')
+
+# Extract product ID from response (requires jq)
+NEW_PRODUCT_ID=$(echo $RESPONSE | jq -r '.product._id')
+echo "Created product with ID: $NEW_PRODUCT_ID"
+
+# Step 2: Get the product details
+curl -X GET http://localhost:3000/api/products/$NEW_PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN"
+
+# Step 3: Update the product
+curl -X PUT http://localhost:3000/api/products/$NEW_PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 129,
+    "description": "Fast EIN application service with expert support"
+  }'
+
+# Step 4: Get all products to see the updated list
+curl -X GET "http://localhost:3000/api/products?limit=10&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# ADDITIONAL EXAMPLES - CREATING DIFFERENT PRODUCT TYPES
+# =============================================================================
+
+# C-Corp Formation
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "C-Corp Formation - Expedited",
+    "description": "Fast-track C-Corporation formation with premium support",
+    "price": 799,
+    "processType": "expedite",
+    "departmentType": "state",
+    "timeToComplete": 5,
+    "productType": "onetime",
+    "category": "Business Formation",
+    "subCategory": "C-Corp"
+  }'
+
+# Registered Agent Service (Recurring)
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "Registered Agent Service - Annual",
+    "description": "Professional registered agent service with mail forwarding",
+    "price": 199,
+    "processType": "standard",
+    "departmentType": "state",
+    "timeToComplete": 1,
+    "productType": "recurring",
+    "category": "Compliance Services",
+    "subCategory": "Registered Agent"
+  }'
+
+# Annual Report Filing
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "Annual Report Filing",
+    "description": "State annual report preparation and filing service",
+    "price": 149,
+    "processType": "standard",
+    "departmentType": "state",
+    "timeToComplete": 7,
+    "productType": "recurring",
+    "category": "Compliance Services",
+    "subCategory": "Annual Reports"
+  }'
+
+# Trademark Registration
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "Federal Trademark Registration",
+    "description": "USPTO trademark registration with comprehensive search",
+    "price": 599,
+    "processType": "standard",
+    "departmentType": "federal",
+    "timeToComplete": 90,
+    "productType": "onetime",
+    "category": "Intellectual Property",
+    "subCategory": "Trademark"
+  }'
+
+# =============================================================================
+# TESTING FILTERS AND PAGINATION
+# =============================================================================
+
+# Get page 1 of products
+curl -X GET "http://localhost:3000/api/products?limit=10&page=1" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get page 2 of products
+curl -X GET "http://localhost:3000/api/products?limit=10&page=2" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get only active products
+curl -X GET "http://localhost:3000/api/products?isActive=true" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get only inactive products
+curl -X GET "http://localhost:3000/api/products?isActive=false" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get expedited products only
+curl -X GET "http://localhost:3000/api/products?processType=expedite" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get recurring services
+curl -X GET "http://localhost:3000/api/products?productType=recurring" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get federal products with expedited processing
+curl -X GET "http://localhost:3000/api/products?departmentType=federal&processType=expedite" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Search for LLC-related products
+curl -X GET "http://localhost:3000/api/products?search=LLC" \
+  -H "Authorization: Bearer $TOKEN"
+
+# =============================================================================
+# PRETTY PRINT RESPONSES (using jq)
+# =============================================================================
+
+# Get all products with formatted output
+curl -X GET "http://localhost:3000/api/products?limit=10&page=1" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Get product by ID with formatted output
+curl -X GET http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# =============================================================================
+# SAVE RESPONSES TO FILE
+# =============================================================================
+
+# Save all products to file
+curl -X GET "http://localhost:3000/api/products?limit=100&page=1" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o products.json
+
+# Save specific product details to file
+curl -X GET http://localhost:3000/api/products/$PRODUCT_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -o product_details.json
+
+echo "Product routes CURL commands completed!"

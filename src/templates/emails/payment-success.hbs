@@ -1,0 +1,32 @@
+<h2>💳 Payment Successful!</h2>
+
+<p>Hi {{userName}},</p>
+
+<p>Thank you! Your payment has been processed successfully.</p>
+
+<div class="info-box">
+    <p><strong>Business:</strong> {{businessName}}</p>
+    <p><strong>Amount Paid:</strong> {{formatCurrency amount}}</p>
+    <p><strong>Payment Method:</strong> {{paymentMethod}}</p>
+    <p><strong>Transaction ID:</strong> {{transactionId}}</p>
+    <p><strong>Date:</strong> {{formatDate paymentDate}}</p>
+</div>
+
+<h3>Services Purchased:</h3>
+<ul style="color: #86868b; line-height: 1.8;">
+    {{#each services}}
+    <li>{{this.name}} - {{formatCurrency this.price}}</li>
+    {{/each}}
+</ul>
+
+<p>Your services are now active and we've begun processing your request. You can track the progress in your dashboard.
+</p>
+
+<a href="{{actionUrl}}" class="button">View Receipt</a>
+
+<p>A detailed receipt has been sent to your email and is available in your account.</p>
+
+<p>Thank you for choosing StartEase!</p>
+
+<p>Best regards,<br>
+    The StartEase Team</p>

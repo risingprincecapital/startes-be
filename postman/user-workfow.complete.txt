@@ -1,0 +1,416 @@
+#!/bin/bash
+
+# =============================================================================
+# COMPLETE USER WORKFLOW - STEP BY STEP
+# This script demonstrates the complete flow from user creation to documents
+# =============================================================================
+
+BASE_URL="http://localhost:3000"
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}COMPLETE USER WORKFLOW - STEP BY STEP${NC}"
+echo -e "${BLUE}========================================${NC}\n"
+
+# =============================================================================
+# STEP 1: CREATE USER (Login with Email - Send OTP)
+# =============================================================================
+echo -e "${GREEN}STEP 1: Creating User - Send OTP to Email${NC}"
+
+USER_EMAIL="john.doe@example.com"
+
+curl -X POST $BASE_URL/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"email\": \"$USER_EMAIL\"
+  }" | jq '.'
+
+echo -e "\n${YELLOW}⚠️  Check your email ($USER_EMAIL) for the OTP code${NC}"
+echo -e "${YELLOW}Enter the OTP you received:${NC}"
+read OTP
+
+echo -e "\n${GREEN}STEP 1B: Verify OTP and Login${NC}"
+
+# Verify OTP and get token
+LOGIN_RESPONSE=$(curl -s -X POST $BASE_URL/api/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"email\": \"$USER_EMAIL\",
+    \"otp\": \"$OTP\"
+  }")
+
+echo $LOGIN_RESPONSE | jq '.'
+
+# Extract token and user ID
+TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
+USER_ID=$(echo $LOGIN_RESPONSE | jq -r '.user.id')
+
+echo -e "\n${BLUE}✓ User Created Successfully${NC}"
+echo -e "User ID: ${YELLOW}$USER_ID${NC}"
+echo -e "Token: ${YELLOW}${TOKEN:0:20}...${NC}\n"
+
+# =============================================================================
+# STEP 2: CREATE BUSINESS FOR THIS USER
+# =============================================================================
+echo -e "${GREEN}STEP 2: Creating Business for User${NC}"
+
+BUSINESS_RESPONSE=$(curl -s -X POST $BASE_URL/api/businesses \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "businessName": "Tech Innovations LLC",
+    "businessDescription": "A technology company specializing in AI and machine learning solutions",
+    "entityType": "LLC",
+    "compLocation": "California",
+    "founderStructure": "multi",
+    "founderInfo": [
+      {
+        "name": "John Doe",
+        "phone": "+1-555-0100",
+        "email": "john.doe@example.com",
+        "country": "USA",
+        "ownershipPercentage": 60,
+        "role": "CEO"
+      },
+      {
+        "name": "Jane Smith",
+        "phone": "+1-555-0101",
+        "email": "jane.smith@example.com",
+        "country": "USA",
+        "ownershipPercentage": 40,
+        "role": "CTO"
+      }
+    ],
+    "ein": "12-3456789",
+    "registrationDate": "2024-01-15",
+    "businessAddress": "123 Tech Street, San Francisco, CA 94105",
+    "businessPhone": "+1-555-0100",
+    "businessEmail": "info@techinnovations.com",
+    "website": "https://techinnovations.com"
+  }')
+
+echo $BUSINESS_RESPONSE | jq '.'
+
+# Extract business ID
+BUSINESS_ID=$(echo $BUSINESS_RESPONSE | jq -r '.business._id')
+
+echo -e "\n${BLUE}✓ Business Created Successfully${NC}"
+echo -e "Business ID: ${YELLOW}$BUSINESS_ID${NC}"
+echo -e "Business Name: ${YELLOW}Tech Innovations LLC${NC}\n"
+
+# =============================================================================
+# STEP 3: ADD PRODUCT FOR THIS USER AND BUSINESS
+# =============================================================================
+echo -e "${GREEN}STEP 3: Creating Product in Catalog${NC}"
+
+# First, create a product in the product catalog
+PRODUCT_RESPONSE=$(curl -s -X POST $BASE_URL/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productName": "LLC Formation - Standard Package",
+    "description": "Complete LLC formation service including articles of organization, operating agreement, and EIN application",
+    "price": 299,
+    "processType": "standard",
+    "departmentType": "state",
+    "timeToComplete": 14,
+    "productType": "onetime",
+    "category": "Business Formation",
+    "subCategory": "LLC",
+    "requiredDocs": [
+      {
+        "docName": "Articles of Organization",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Legal document to form LLC"
+      },
+      {
+        "docName": "Operating Agreement",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Internal operating rules"
+      },
+      {
+        "docName": "Founder ID Documents",
+        "uploadTime": "Day 1",
+        "file": "",
+        "docType": "PDF",
+        "category": "requiredDoc",
+        "isRequired": true,
+        "description": "Government-issued ID for all founders"
+      }
+    ],
+    "acknowledgements": [
+      {
+        "docName": "EIN Confirmation Letter",
+        "uploadTime": "Day 10",
+        "file": "",
+        "docType": "PDF",
+        "category": "acknowledgement",
+        "isRequired": false,
+        "description": "IRS confirmation of EIN"
+      },
+      {
+        "docName": "Certificate of Formation",
+        "uploadTime": "Day 14",
+        "file": "",
+        "docType": "PDF",
+        "category": "acknowledgement",
+        "isRequired": false,
+        "description": "State-issued certificate"
+      }
+    ]
+  }')
+
+echo $PRODUCT_RESPONSE | jq '.'
+
+# Extract product ID
+PRODUCT_ID=$(echo $PRODUCT_RESPONSE | jq -r '.product._id')
+
+echo -e "\n${BLUE}✓ Product Created in Catalog${NC}"
+echo -e "Product ID: ${YELLOW}$PRODUCT_ID${NC}"
+echo -e "Product Name: ${YELLOW}LLC Formation - Standard Package${NC}\n"
+
+# Now add this product to the business
+echo -e "${GREEN}STEP 3B: Adding Product to Business${NC}"
+
+BUSINESS_PRODUCT_RESPONSE=$(curl -s -X POST $BASE_URL/api/businesses/$BUSINESS_ID/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"productId\": \"$PRODUCT_ID\",
+    \"purchasePrice\": 299,
+    \"startDate\": \"2024-01-15\",
+    \"notes\": \"Standard LLC formation package for Tech Innovations LLC\"
+  }")
+
+echo $BUSINESS_PRODUCT_RESPONSE | jq '.'
+
+# Extract business product ID
+BUSINESS_PRODUCT_ID=$(echo $BUSINESS_PRODUCT_RESPONSE | jq -r '.businessProduct._id')
+
+echo -e "\n${BLUE}✓ Product Added to Business${NC}"
+echo -e "Business-Product ID: ${YELLOW}$BUSINESS_PRODUCT_ID${NC}\n"
+
+# =============================================================================
+# STEP 4: GET ALL BUSINESSES FOR THIS USER
+# =============================================================================
+echo -e "${GREEN}STEP 4: Getting All Businesses for User${NC}"
+
+curl -X GET "$BASE_URL/api/businesses?limit=50&page=1" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}✓ Retrieved All Businesses for User${NC}\n"
+
+# =============================================================================
+# STEP 5: GET ALL PRODUCTS FOR THIS USER FOR THIS PARTICULAR BUSINESS
+# =============================================================================
+echo -e "${GREEN}STEP 5: Getting All Products for This Business${NC}"
+
+# Get specific business with all its products
+curl -X GET "$BASE_URL/api/businesses/$BUSINESS_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}Alternative: Get all business-products filtered by business${NC}"
+
+curl -X GET "$BASE_URL/api/business-products?businessId=$BUSINESS_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}✓ Retrieved All Products for Business${NC}\n"
+
+# =============================================================================
+# STEP 6: UPLOAD DOCUMENTS FOR PRODUCT AND BUSINESS
+# =============================================================================
+echo -e "${GREEN}STEP 6A: Uploading Required Documents${NC}"
+
+# Upload Document 1: Articles of Organization
+DOC1_RESPONSE=$(curl -s -X POST $BASE_URL/api/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"businessId\": \"$BUSINESS_ID\",
+    \"productId\": \"$PRODUCT_ID\",
+    \"businessProductId\": \"$BUSINESS_PRODUCT_ID\",
+    \"docName\": \"Articles of Organization - Signed\",
+    \"file\": \"https://storage.example.com/docs/articles-org-tech-innovations.pdf\",
+    \"docType\": \"PDF\",
+    \"category\": \"requiredDoc\",
+    \"description\": \"Signed and notarized articles of organization for Tech Innovations LLC\",
+    \"isRequired\": true,
+    \"fileSize\": 524288
+  }")
+
+echo $DOC1_RESPONSE | jq '.'
+
+DOCUMENT1_ID=$(echo $DOC1_RESPONSE | jq -r '.document._id')
+
+echo -e "\n${BLUE}✓ Document 1 Uploaded${NC}"
+echo -e "Document ID: ${YELLOW}$DOCUMENT1_ID${NC}\n"
+
+# Upload Document 2: Operating Agreement
+DOC2_RESPONSE=$(curl -s -X POST $BASE_URL/api/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"businessId\": \"$BUSINESS_ID\",
+    \"productId\": \"$PRODUCT_ID\",
+    \"businessProductId\": \"$BUSINESS_PRODUCT_ID\",
+    \"docName\": \"Operating Agreement - Executed\",
+    \"file\": \"https://storage.example.com/docs/operating-agreement-tech-innovations.pdf\",
+    \"docType\": \"PDF\",
+    \"category\": \"requiredDoc\",
+    \"description\": \"Fully executed operating agreement with all founder signatures\",
+    \"isRequired\": true,
+    \"fileSize\": 389120
+  }")
+
+echo $DOC2_RESPONSE | jq '.'
+
+DOCUMENT2_ID=$(echo $DOC2_RESPONSE | jq -r '.document._id')
+
+echo -e "\n${BLUE}✓ Document 2 Uploaded${NC}"
+echo -e "Document ID: ${YELLOW}$DOCUMENT2_ID${NC}\n"
+
+# Upload Document 3: Founder ID Documents
+DOC3_RESPONSE=$(curl -s -X POST $BASE_URL/api/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"businessId\": \"$BUSINESS_ID\",
+    \"productId\": \"$PRODUCT_ID\",
+    \"businessProductId\": \"$BUSINESS_PRODUCT_ID\",
+    \"docName\": \"Founder ID Documents - Combined\",
+    \"file\": \"https://storage.example.com/docs/founder-ids-combined.pdf\",
+    \"docType\": \"PDF\",
+    \"category\": \"requiredDoc\",
+    \"description\": \"Driver licenses for John Doe and Jane Smith\",
+    \"isRequired\": true,
+    \"fileSize\": 1048576
+  }")
+
+echo $DOC3_RESPONSE | jq '.'
+
+DOCUMENT3_ID=$(echo $DOC3_RESPONSE | jq -r '.document._id')
+
+echo -e "\n${BLUE}✓ Document 3 Uploaded${NC}"
+echo -e "Document ID: ${YELLOW}$DOCUMENT3_ID${NC}\n"
+
+# Upload Acknowledgement Document
+DOC4_RESPONSE=$(curl -s -X POST $BASE_URL/api/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"businessId\": \"$BUSINESS_ID\",
+    \"productId\": \"$PRODUCT_ID\",
+    \"businessProductId\": \"$BUSINESS_PRODUCT_ID\",
+    \"docName\": \"EIN Confirmation Letter\",
+    \"file\": \"https://storage.example.com/docs/ein-confirmation-147.pdf\",
+    \"docType\": \"PDF\",
+    \"category\": \"acknowledgement\",
+    \"description\": \"IRS confirmation letter for EIN 12-3456789\",
+    \"isRequired\": false,
+    \"fileSize\": 204800
+  }")
+
+echo $DOC4_RESPONSE | jq '.'
+
+DOCUMENT4_ID=$(echo $DOC4_RESPONSE | jq -r '.document._id')
+
+echo -e "\n${BLUE}✓ Acknowledgement Document Uploaded${NC}"
+echo -e "Document ID: ${YELLOW}$DOCUMENT4_ID${NC}\n"
+
+# =============================================================================
+# STEP 7: GET DOCUMENTS FOR PARTICULAR PRODUCT, BUSINESS, AND USER
+# =============================================================================
+echo -e "${GREEN}STEP 7: Getting Documents for Particular Product, Business, and User${NC}\n"
+
+# Method 1: Get documents by business ID (grouped by category)
+echo -e "${BLUE}Method 1: Get All Documents for This Business${NC}"
+curl -X GET "$BASE_URL/api/documents/business/$BUSINESS_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}Method 2: Get Documents with Filters (business + product)${NC}"
+curl -X GET "$BASE_URL/api/documents?businessId=$BUSINESS_ID&productId=$PRODUCT_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}Method 3: Get Only Required Documents${NC}"
+curl -X GET "$BASE_URL/api/documents?businessId=$BUSINESS_ID&productId=$PRODUCT_ID&category=requiredDoc" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}Method 4: Get Only Acknowledgement Documents${NC}"
+curl -X GET "$BASE_URL/api/documents?businessId=$BUSINESS_ID&productId=$PRODUCT_ID&category=acknowledgement" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}Method 5: Get Documents by Status${NC}"
+curl -X GET "$BASE_URL/api/documents?businessId=$BUSINESS_ID&status=uploaded" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}✓ Retrieved All Documents for Product, Business, and User${NC}\n"
+
+# =============================================================================
+# BONUS: GET DETAILED VIEW OF SPECIFIC DOCUMENT
+# =============================================================================
+echo -e "${GREEN}BONUS: Getting Detailed View of Specific Document${NC}"
+
+curl -X GET "$BASE_URL/api/documents/$DOCUMENT1_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n${BLUE}✓ Retrieved Detailed Document Information${NC}\n"
+
+# =============================================================================
+# SUMMARY
+# =============================================================================
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}WORKFLOW SUMMARY${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "User Email:          ${YELLOW}$USER_EMAIL${NC}"
+echo -e "User ID:             ${YELLOW}$USER_ID${NC}"
+echo -e "Token:               ${YELLOW}${TOKEN:0:30}...${NC}"
+echo -e "Business ID:         ${YELLOW}$BUSINESS_ID${NC}"
+echo -e "Business Name:       ${YELLOW}Tech Innovations LLC${NC}"
+echo -e "Product ID:          ${YELLOW}$PRODUCT_ID${NC}"
+echo -e "Product Name:        ${YELLOW}LLC Formation - Standard Package${NC}"
+echo -e "Business-Product ID: ${YELLOW}$BUSINESS_PRODUCT_ID${NC}"
+echo -e "Document 1 ID:       ${YELLOW}$DOCUMENT1_ID${NC}"
+echo -e "Document 2 ID:       ${YELLOW}$DOCUMENT2_ID${NC}"
+echo -e "Document 3 ID:       ${YELLOW}$DOCUMENT3_ID${NC}"
+echo -e "Document 4 ID:       ${YELLOW}$DOCUMENT4_ID${NC}"
+echo -e "${GREEN}========================================${NC}\n"
+
+# =============================================================================
+# SAVE VARIABLES TO FILE FOR LATER USE
+# =============================================================================
+cat > workflow_variables.sh << EOF
+#!/bin/bash
+# Workflow Variables - Generated on $(date)
+export USER_EMAIL="$USER_EMAIL"
+export USER_ID="$USER_ID"
+export TOKEN="$TOKEN"
+export BUSINESS_ID="$BUSINESS_ID"
+export PRODUCT_ID="$PRODUCT_ID"
+export BUSINESS_PRODUCT_ID="$BUSINESS_PRODUCT_ID"
+export DOCUMENT1_ID="$DOCUMENT1_ID"
+export DOCUMENT2_ID="$DOCUMENT2_ID"
+export DOCUMENT3_ID="$DOCUMENT3_ID"
+export DOCUMENT4_ID="$DOCUMENT4_ID"
+EOF
+
+chmod +x workflow_variables.sh
+
+echo -e "${GREEN}✓ All variables saved to workflow_variables.sh${NC}"
+echo -e "${YELLOW}To reuse these variables, run: source workflow_variables.sh${NC}\n"
+
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}WORKFLOW COMPLETED SUCCESSFULLY!${NC}"
+echo -e "${GREEN}========================================${NC}"
