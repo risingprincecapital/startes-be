@@ -108,7 +108,7 @@ export class BusinessController {
       // Send business formation email
       const user = await User.findById(userId);
       if (user) {
-        await emailService.sendBusinessFormationEmail(
+        emailService.sendBusinessFormationEmail(
           user.email,
           {
             userName: user.name || user.email,

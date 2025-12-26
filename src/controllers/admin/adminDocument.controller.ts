@@ -5,6 +5,8 @@ import { BusinessProduct } from '../../models/businessProduct.model';
 import { Product } from '../../models/product.model';
 import { uploadToS3, generateSignedUrl } from '../../utils/s3';
 import { NotificationService } from '../../services/notification.service';
+import { emailService } from '../../services/email.service';
+import { User } from '../../models/user.model';
 
 export class AdminDocumentController {
     // Get all documents for a business (only for purchased products)
@@ -135,16 +137,32 @@ export class AdminDocumentController {
                 }
             }
 
-            // Send notification to user
+            // Send notification and email to user
             try {
                 const business = await Business.findById(document.businessId);
                 if (business) {
+                    // Send push notification
                     await NotificationService.notifyDocumentVerified(
                         business.userId,
                         business.businessName,
                         document.docName,
                         business._id
                     );
+
+                    // Send email notification
+                    const user = await User.findById(business.userId);
+                    if (user) {
+                        await emailService.sendDocumentApprovedEmail(
+                            user.email,
+                            {
+                                userName: user.name || user.email,
+                                documentName: document.docName,
+                                businessName: business.businessName,
+                                actionUrl: `${process.env.FRONTEND_URL}/dashboard/businesses/${business._id}`,
+                            },
+                            user._id.toString()
+                        );
+                    }
                 }
             } catch (notifError) {
                 console.error('Failed to send notification:', notifError);
@@ -183,10 +201,11 @@ export class AdminDocumentController {
             document.rejectionReason = rejectionReason;
             await document.save();
 
-            // Send notification to user
+            // Send notification and email to user
             try {
                 const business = await Business.findById(document.businessId);
                 if (business) {
+                    // Send push notification
                     await NotificationService.notifyDocumentRejected(
                         business.userId,
                         business.businessName,
@@ -194,6 +213,22 @@ export class AdminDocumentController {
                         rejectionReason,
                         business._id
                     );
+
+                    // Send email notification
+                    const user = await User.findById(business.userId);
+                    if (user) {
+                        await emailService.sendDocumentRejectedEmail(
+                            user.email,
+                            {
+                                userName: user.name || user.email,
+                                documentName: document.docName,
+                                businessName: business.businessName,
+                                rejectionReason: rejectionReason,
+                                actionUrl: `${process.env.FRONTEND_URL}/dashboard/businesses/${business._id}`,
+                            },
+                            user._id.toString()
+                        );
+                    }
                 }
             } catch (notifError) {
                 console.error('Failed to send notification:', notifError);

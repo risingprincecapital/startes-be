@@ -224,7 +224,7 @@ export class PaymentController {
                     await business.save();
                 }
 
-                await emailService.sendPaymentSuccessEmail(
+                emailService.sendPaymentSuccessEmail(
                     user.email,
                     {
                         userName: user.name || user.email,
@@ -290,7 +290,7 @@ export class PaymentController {
                 const user = payment.userId as any;
                 const business = payment.businessId as any;
 
-                await emailService.sendPaymentFailedEmail(
+                emailService.sendPaymentFailedEmail(
                     user.email,
                     {
                         userName: user.name || user.email,

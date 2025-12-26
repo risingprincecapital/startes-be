@@ -3,15 +3,15 @@ import IORedis from 'ioredis';
 
 // Redis connection
 const connection = new IORedis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
+    host: process.env.REDIS_HOST, //|| 'localhost',
+    port: parseInt(process.env.REDIS_PORT || ''), // || '6379'),
     password: process.env.REDIS_PASSWORD,
     maxRetriesPerRequest: null,
     connectTimeout: 10000, // 10 seconds
     commandTimeout: 30000,
     lazyConnect: true,
     retryStrategy: times => Math.min(times * 500, 10000),
-    enableOfflineQueue: true,
+    enableOfflineQueue: true
 });
 
 connection.on('error', (err) => console.error('Redis connection error:', err));
