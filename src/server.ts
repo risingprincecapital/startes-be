@@ -21,7 +21,10 @@ const requiredEnvVars = [
   'EMAIL_PASSWORD',
   'GOOGLE_CLIENT_ID',
   'STRIPE_SECRET_KEY',
-  'STRIPE_WEBHOOK_SECRET'
+  'STRIPE_WEBHOOK_SECRET',
+  'REDIS_HOST',
+  'REDIS_PORT',
+  'REDIS_PASSWORD'
 ];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 

@@ -39,13 +39,20 @@ export class EmailService {
      * Queue an email to be sent
      */
     async queueEmail(options: SendEmailOptions): Promise<void> {
-        await emailQueue.add('send-email', options, {
-            attempts: 3,
-            backoff: {
-                type: 'exponential',
-                delay: 2000,
-            },
-        });
+        console.log(`[EmailService] Starting queueEmail for ${options.to} with subject "${options.subject}"`);
+        try {
+            await emailQueue.add('send-email', options, {
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 2000,
+                },
+            });
+            console.log(`[EmailService] Successfully queued email for ${options.to}`);
+        } catch (error) {
+            console.error(`[EmailService] Failed to queue email for ${options.to}:`, error);
+            throw error;
+        }
 
         // Create notification record
         if (options.userId) {
