@@ -29,55 +29,58 @@ export class BusinessController {
         businessEmail,
         website,
         departmentType,
+        alreadyRegistered,
       } = req.body;
 
       if (!businessName || !businessDescription || !entityType || !compLocation || !founderStructure || !founderInfo) {
         return res.status(400).json({ error: 'All required fields must be provided' });
       }
-
-      // Build filter for recommended products
-      const productFilter: any = { category: 'Formation' };
-
-      // Add filters if provided
-      productFilter.subCategory = entityType;
-      productFilter.departmentType = compLocation;
-
-      // Get products matching the filters (without sorting yet)
-      const matchingProducts = await Product.find(productFilter)
-        .select('_id');
-
-      // Get products for 'Registered Agent'
-      const registeredAgentProducts = await Product.find({
-        subCategory: 'Registered Agent',
-        departmentType: compLocation,
-        isActive: true,
-      }).select('_id');
-
-
-      // Get one product with subCategory = 'EIN' (without sorting yet)
-      const einProduct = await Product.findOne({
-        subCategory: 'EIN',
-        isActive: true
-      })
-        .select('_id');
-
       const productMap = new Map<string, boolean>();
+      let isActive = false;
+      if (!alreadyRegistered) {
+        // Build filter for recommended products
+        const productFilter: any = { category: 'Formation' };
 
-      // Add matching products
-      matchingProducts.forEach(product => {
-        productMap.set(product._id.toString(), true);
-      });
+        // Add filters if provided
+        productFilter.subCategory = entityType;
+        productFilter.departmentType = compLocation;
 
-      // Add Registered Agent products
-      registeredAgentProducts.forEach(product => {
-        productMap.set(product._id.toString(), true);
-      });
+        // Get products matching the filters (without sorting yet)
+        const matchingProducts = await Product.find(productFilter)
+          .select('_id');
 
-      // Add EIN product if found
-      if (einProduct) {
-        productMap.set(einProduct._id.toString(), true);
+        // Get products for 'Registered Agent'
+        const registeredAgentProducts = await Product.find({
+          subCategory: 'Registered Agent',
+          departmentType: compLocation,
+          isActive: true,
+        }).select('_id');
+
+
+        // Get one product with subCategory = 'EIN' (without sorting yet)
+        const einProduct = await Product.findOne({
+          subCategory: 'EIN',
+          isActive: true
+        })
+          .select('_id');
+
+        // Add matching products
+        matchingProducts.forEach(product => {
+          productMap.set(product._id.toString(), true);
+        });
+
+        // Add Registered Agent products
+        registeredAgentProducts.forEach(product => {
+          productMap.set(product._id.toString(), true);
+        });
+
+        // Add EIN product if found
+        if (einProduct) {
+          productMap.set(einProduct._id.toString(), true);
+        }
+      } else {
+        isActive = true;
       }
-
       // Convert to array without sorting
       const recommendedProduct = Array.from(productMap.keys())
         .map(id => ({
@@ -102,7 +105,8 @@ export class BusinessController {
         businessPhone,
         businessEmail,
         website,
-        isActive: false, // Business starts inactive, activated on payment success
+        isActive, //   Business starts inactive, activated on payment success
+        alreadyRegistered,
       });
 
       // Send business formation email

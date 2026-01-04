@@ -70,6 +70,7 @@ export interface IBusiness extends Document {
   incorporationContext?: 'SUBSIDIARY' | 'STANDALONE' | 'HOLDING';
   parentCompany?: IParentCompany;
   fundraisingEnabled?: boolean;
+  alreadyRegistered?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -321,6 +322,10 @@ const businessSchema = new Schema<IBusiness>(
       type: parentCompanySchema,
     },
     fundraisingEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    alreadyRegistered: {
       type: Boolean,
       default: false,
     },
