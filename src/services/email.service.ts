@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { emailQueue } from '../config/queue';
+import { sendMessage, QUEUE_URLS } from '../config/sqs';
 import { emailTemplateEngine, EmailTemplateData } from './emailTemplate.service';
 import { Notification } from '../models/notification.model';
 
@@ -41,12 +41,9 @@ export class EmailService {
     async queueEmail(options: SendEmailOptions): Promise<void> {
         console.log(`[EmailService] Starting queueEmail for ${options.to} with subject "${options.subject}"`);
         try {
-            await emailQueue.add('send-email', options, {
-                attempts: 3,
-                backoff: {
-                    type: 'exponential',
-                    delay: 2000,
-                },
+            await sendMessage(QUEUE_URLS.EMAIL, {
+                type: 'send-email',
+                data: options,
             });
             console.log(`[EmailService] Successfully queued email for ${options.to}`);
         } catch (error) {
@@ -72,12 +69,9 @@ export class EmailService {
      * Queue a custom email (for admin panel)
      */
     async queueCustomEmail(options: SendCustomEmailOptions): Promise<void> {
-        await emailQueue.add('send-custom-email', options, {
-            attempts: 3,
-            backoff: {
-                type: 'exponential',
-                delay: 2000,
-            },
+        await sendMessage(QUEUE_URLS.EMAIL, {
+            type: 'send-custom-email',
+            data: options,
         });
 
         // Create notification record

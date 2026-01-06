@@ -22,9 +22,11 @@ const requiredEnvVars = [
   'GOOGLE_CLIENT_ID',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
-  'REDIS_HOST',
-  'REDIS_PORT',
-  'REDIS_PASSWORD'
+  'AWS_REGION',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_SQS_EMAIL_QUEUE_URL',
+  'AWS_SQS_NOTIFICATION_QUEUE_URL'
 ];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 

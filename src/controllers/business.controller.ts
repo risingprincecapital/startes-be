@@ -119,7 +119,7 @@ export class BusinessController {
             businessName,
             entityType,
             state: compLocation,
-            actionUrl: `${process.env.FRONTEND_URL}/dashboard/businesses/${business._id}`,
+            actionUrl: `${process.env.FRONTEND_URL}`,
           },
           userId
         );

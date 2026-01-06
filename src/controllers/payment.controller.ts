@@ -237,7 +237,7 @@ export class PaymentController {
                             name: bp.productId.productName,
                             price: bp.purchasePrice,
                         })),
-                        actionUrl: `${process.env.FRONTEND_URL}/dashboard/payments/${payment._id}`,
+                        actionUrl: `${process.env.FRONTEND_URL}`,
                     },
                     user._id.toString()
                 );
@@ -298,7 +298,7 @@ export class PaymentController {
                         amount: payment.amount,
                         attemptDate: new Date(),
                         failureReason: paymentIntent.last_payment_error?.message || 'Payment was declined',
-                        actionUrl: `${process.env.FRONTEND_URL}/dashboard/payments/${payment._id}/retry`,
+                        actionUrl: `${process.env.FRONTEND_URL}`,
                     },
                     user._id.toString()
                 );

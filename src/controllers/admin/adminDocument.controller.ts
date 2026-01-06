@@ -158,7 +158,7 @@ export class AdminDocumentController {
                                 userName: user.name || user.email,
                                 documentName: document.docName,
                                 businessName: business.businessName,
-                                actionUrl: `${process.env.FRONTEND_URL}/dashboard/businesses/${business._id}`,
+                                actionUrl: `${process.env.FRONTEND_URL}`,
                             },
                             user._id.toString()
                         );
@@ -224,7 +224,7 @@ export class AdminDocumentController {
                                 documentName: document.docName,
                                 businessName: business.businessName,
                                 rejectionReason: rejectionReason,
-                                actionUrl: `${process.env.FRONTEND_URL}/dashboard/businesses/${business._id}`,
+                                actionUrl: `${process.env.FRONTEND_URL}`,
                             },
                             user._id.toString()
                         );

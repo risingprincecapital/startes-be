@@ -1,89 +1,130 @@
-import { Worker, Job } from 'bullmq';
-import { connection, QUEUE_NAMES } from '../config/queue';
+import { Message } from '@aws-sdk/client-sqs';
+import { receiveMessages, deleteMessage, QUEUE_URLS } from '../config/sqs';
 import { emailService, SendEmailOptions, SendCustomEmailOptions } from '../services/email.service';
 
-// Email Worker
-export const emailWorker = new Worker(
-    QUEUE_NAMES.EMAIL,
-    async (job: Job) => {
-        console.log(`📧 Processing email job: ${job.id}`);
+// Email Worker - Polls SQS for email messages
+async function processEmailQueue() {
+    console.log('📧 Email worker started, polling SQS...');
 
+    while (true) {
         try {
-            if (job.name === 'send-email') {
-                const options = job.data as SendEmailOptions;
-                await emailService.sendEmail(options);
-            } else if (job.name === 'send-custom-email') {
-                const options = job.data as SendCustomEmailOptions;
-                await emailService.sendCustomEmail(options);
+            // Receive messages from SQS (long polling)
+            const messages = await receiveMessages(QUEUE_URLS.EMAIL, 5, 20);
+
+            if (messages.length === 0) {
+                continue; // No messages, continue polling
             }
 
-            console.log(`✅ Email job ${job.id} completed`);
+            console.log(`📧 Received ${messages.length} email message(s)`);
+
+            // Process messages concurrently
+            await Promise.all(
+                messages.map(async (message: Message) => {
+                    try {
+                        if (!message.Body || !message.ReceiptHandle) {
+                            console.error('❌ Invalid message format');
+                            return;
+                        }
+
+                        const messageBody = JSON.parse(message.Body);
+                        const { type, data } = messageBody;
+
+                        console.log(`📧 Processing email job: ${message.MessageId}, type: ${type}`);
+
+                        // Process based on message type
+                        if (type === 'send-email') {
+                            const options = data as SendEmailOptions;
+                            await emailService.sendEmail(options);
+                        } else if (type === 'send-custom-email') {
+                            const options = data as SendCustomEmailOptions;
+                            await emailService.sendCustomEmail(options);
+                        } else {
+                            console.error(`❌ Unknown message type: ${type}`);
+                        }
+
+                        // Delete message after successful processing
+                        await deleteMessage(QUEUE_URLS.EMAIL, message.ReceiptHandle);
+                        console.log(`✅ Email job ${message.MessageId} completed and deleted`);
+                    } catch (error: any) {
+                        console.error(`❌ Email job ${message.MessageId} failed:`, error.message);
+                        // Message will become visible again after visibility timeout
+                        // SQS will retry automatically (up to maxReceiveCount before moving to DLQ)
+                    }
+                })
+            );
         } catch (error: any) {
-            console.error(`❌ Email job ${job.id} failed:`, error.message);
-            throw error; // Re-throw to trigger retry
+            console.error('❌ Email worker error:', error.message);
+            // Wait before retrying
+            await new Promise((resolve) => setTimeout(resolve, 5000));
         }
-    },
-    {
-        connection,
-        concurrency: 5, // Process up to 5 emails concurrently
-        limiter: {
-            max: 10, // Max 10 jobs
-            duration: 1000, // Per second
-        },
     }
-);
+}
 
-// Worker event listeners
-emailWorker.on('completed', (job) => {
-    console.log(`✅ Email worker completed job ${job.id}`);
-});
+// Notification Worker - Polls SQS for notification messages
+async function processNotificationQueue() {
+    console.log('🔔 Notification worker started, polling SQS...');
 
-emailWorker.on('failed', (job, err) => {
-    console.error(`❌ Email worker failed job ${job?.id}:`, err.message);
-});
-
-emailWorker.on('error', (err) => {
-    console.error('❌ Email worker error:', err);
-});
-
-console.log('📧 Email worker started');
-
-// Notification Worker (placeholder for push notifications)
-export const notificationWorker = new Worker(
-    QUEUE_NAMES.NOTIFICATION,
-    async (job: Job) => {
-        console.log(`🔔 Processing notification job: ${job.id}`);
-
+    while (true) {
         try {
-            // TODO: Implement push notification logic
-            // For now, just log
-            console.log('Notification data:', job.data);
-            console.log(`✅ Notification job ${job.id} completed`);
+            // Receive messages from SQS (long polling)
+            const messages = await receiveMessages(QUEUE_URLS.NOTIFICATION, 10, 20);
+
+            if (messages.length === 0) {
+                continue; // No messages, continue polling
+            }
+
+            console.log(`🔔 Received ${messages.length} notification message(s)`);
+
+            // Process messages concurrently
+            await Promise.all(
+                messages.map(async (message: Message) => {
+                    try {
+                        if (!message.Body || !message.ReceiptHandle) {
+                            console.error('❌ Invalid message format');
+                            return;
+                        }
+
+                        const messageBody = JSON.parse(message.Body);
+                        console.log(`🔔 Processing notification job: ${message.MessageId}`);
+
+                        // TODO: Implement push notification logic
+                        console.log('Notification data:', messageBody);
+
+                        // Delete message after successful processing
+                        await deleteMessage(QUEUE_URLS.NOTIFICATION, message.ReceiptHandle);
+                        console.log(`✅ Notification job ${message.MessageId} completed and deleted`);
+                    } catch (error: any) {
+                        console.error(`❌ Notification job ${message.MessageId} failed:`, error.message);
+                        // Message will become visible again after visibility timeout
+                    }
+                })
+            );
         } catch (error: any) {
-            console.error(`❌ Notification job ${job.id} failed:`, error.message);
-            throw error;
+            console.error('❌ Notification worker error:', error.message);
+            // Wait before retrying
+            await new Promise((resolve) => setTimeout(resolve, 5000));
         }
-    },
-    {
-        connection,
-        concurrency: 10,
     }
-);
+}
 
-notificationWorker.on('completed', (job) => {
-    console.log(`✅ Notification worker completed job ${job.id}`);
+// Start both workers
+processEmailQueue().catch((error) => {
+    console.error('❌ Email worker crashed:', error);
+    process.exit(1);
 });
 
-notificationWorker.on('failed', (job, err) => {
-    console.error(`❌ Notification worker failed job ${job?.id}:`, err.message);
+processNotificationQueue().catch((error) => {
+    console.error('❌ Notification worker crashed:', error);
+    process.exit(1);
 });
-
-console.log('🔔 Notification worker started');
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, closing workers...');
-    await emailWorker.close();
-    await notificationWorker.close();
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down workers...');
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down workers...');
     process.exit(0);
 });
