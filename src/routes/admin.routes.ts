@@ -29,6 +29,7 @@ router.get('/documents/business/:businessId', adminDocumentController.getBusines
 router.put('/documents/:id/verify', adminDocumentController.verifyDocument.bind(adminDocumentController));
 router.put('/documents/:id/reject', adminDocumentController.rejectDocument.bind(adminDocumentController));
 router.post('/documents/acknowledgement', adminDocumentController.uploadAcknowledgement.bind(adminDocumentController));
+router.delete('/documents/:id', adminDocumentController.deleteDocument.bind(adminDocumentController));
 
 // Super Admin Routes (Protected by requireSuperAdmin)
 // Required Documents CRUD

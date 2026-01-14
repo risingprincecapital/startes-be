@@ -357,4 +357,47 @@ export class AdminDocumentController {
             next(error);
         }
     }
+
+    // Delete document
+    async deleteDocument(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+
+            const document = await UserDocument.findByIdAndDelete(id);
+
+            if (!document) {
+                return res.status(404).json({ error: 'Document not found' });
+            }
+
+            // If an acknowledgement is deleted, check if any others remain
+            if (document.category === 'acknowledgement' && document.businessProductId) {
+                const remainingAcks = await UserDocument.countDocuments({
+                    businessProductId: document.businessProductId,
+                    category: 'acknowledgement'
+                });
+
+                // If no acknowledgements left, roll back business product state
+                if (remainingAcks === 0) {
+                    const businessProduct = await BusinessProduct.findById(document.businessProductId);
+                    if (businessProduct) {
+                        businessProduct.status = 'active';
+                        businessProduct.progress = 75;
+                        if (businessProduct.completedSteps) {
+                            businessProduct.completedSteps = businessProduct.completedSteps.filter(
+                                step => step !== 'acknowledgement'
+                            );
+                        }
+                        await businessProduct.save();
+                    }
+                }
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Document deleted successfully',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
