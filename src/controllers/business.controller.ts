@@ -38,47 +38,43 @@ export class BusinessController {
       const productMap = new Map<string, boolean>();
       let isActive = false;
       if (!alreadyRegistered) {
-        // Build filter for recommended products
-        const productFilter: any = { category: 'Formation' };
-
-        // Add filters if provided
-        productFilter.subCategory = entityType;
-        productFilter.departmentType = compLocation;
-
-        // Get products matching the filters (without sorting yet)
-        const matchingProducts = await Product.find(productFilter)
-          .select('_id');
-
-        // Get products for 'Registered Agent'
-        const registeredAgentProducts = await Product.find({
-          subCategory: 'Registered Agent',
-          departmentType: compLocation,
-          isActive: true,
+        // Build single combined query for all recommended products
+        const products = await Product.find({
+          $or: [
+            { category: 'Formation', subCategory: entityType, departmentType: compLocation, isActive: true },
+            { category: 'Registered Agent', departmentType: compLocation, isActive: true },
+            { category: 'Business Bank', isActive: true },
+            { subCategory: 'EIN', isActive: true }
+          ]
         }).select('_id');
 
+        // Add all found products to map
+        products.forEach(product => productMap.set(product._id.toString(), true));
 
-        // Get one product with subCategory = 'EIN' (without sorting yet)
-        const einProduct = await Product.findOne({
-          subCategory: 'EIN',
-          isActive: true
-        })
-          .select('_id');
-
-        // Add matching products
-        matchingProducts.forEach(product => {
-          productMap.set(product._id.toString(), true);
-        });
-
-        // Add Registered Agent products
-        registeredAgentProducts.forEach(product => {
-          productMap.set(product._id.toString(), true);
-        });
-
-        // Add EIN product if found
-        if (einProduct) {
-          productMap.set(einProduct._id.toString(), true);
-        }
       } else {
+        // Handle Already Registered case
+        let taxCategory = '';
+        if (founderStructure === 'solo' && entityType === 'LLC') {
+          taxCategory = 'Tax Filing solo';
+        } else if (founderStructure === 'multi' && entityType === 'LLC') {
+          taxCategory = 'Tax Filing multi';
+        } else if (entityType === 'C-Corp') {
+          taxCategory = 'Tax Filing corp';
+        }
+
+        const orFilters: any[] = [
+          { subCategory: 'EIN', isActive: true },
+          { category: 'Registered Agent', departmentType: compLocation, isActive: true },
+          { category: 'Registered Agent Change', departmentType: compLocation, isActive: true }
+        ];
+
+        if (taxCategory) {
+          orFilters.push({ category: taxCategory, isActive: true });
+        }
+
+        const products = await Product.find({ $or: orFilters }).select('_id');
+        products.forEach(product => productMap.set(product._id.toString(), true));
+
         isActive = true;
       }
       // Convert to array without sorting
