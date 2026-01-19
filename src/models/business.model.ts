@@ -14,7 +14,6 @@ interface IFounder {
     number?: string;
   };
   visitedUSForBusiness?: boolean;
-  visitDetails?: any;
   compensationMethod?: 'SALARY' | 'DIVIDENDS' | 'BOTH';
   w8Provided?: boolean;
 }
@@ -126,9 +125,6 @@ const founderSchema = new Schema<IFounder>(
     visitedUSForBusiness: {
       type: Boolean,
       default: false,
-    },
-    visitDetails: {
-      type: Schema.Types.Mixed,
     },
     compensationMethod: {
       type: String,
