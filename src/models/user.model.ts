@@ -55,7 +55,7 @@ const userSchema = new Schema<IUser>(
 
 // Virtual field for admin check
 userSchema.virtual('isAdmin').get(function () {
-  return this.role === 'admin' || this.role === 'superadmin' || this.email.endsWith('@startease.com');
+  return this.role === 'admin' || this.role === 'superadmin' || this.email.endsWith('@starteaseai.com');
 });
 
 // Virtual field for super admin check
